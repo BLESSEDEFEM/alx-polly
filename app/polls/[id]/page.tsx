@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "../../components/ui"
 
 export const metadata: Metadata = {
   title: "Poll Details",

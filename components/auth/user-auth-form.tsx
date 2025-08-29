@@ -2,7 +2,9 @@
 
 import * as React from 'react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
+import { Button } from '../ui/button'
+import { useAuth } from '../../contexts/auth-context'
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   type: 'signin' | 'signup'
@@ -10,23 +12,64 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string>('')
+  const { signIn, signUp } = useAuth()
+  const router = useRouter()
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
     setIsLoading(true)
+    setError('')
 
-    // Simulate authentication process
-    setTimeout(() => {
+    const formData = new FormData(event.target as HTMLFormElement)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+    const name = formData.get('name') as string
+    const confirmPassword = formData.get('confirm-password') as string
+
+    // Validation
+    if (!email || !password) {
+      setError('Please fill in all required fields')
       setIsLoading(false)
-      // Redirect to polls dashboard after authentication
-      window.location.href = '/polls'
-    }, 1000)
+      return
+    }
+
+    if (type === 'signup' && password !== confirmPassword) {
+      setError('Passwords do not match')
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      let result
+      if (type === 'signin') {
+        result = await signIn(email, password)
+      } else {
+        result = await signUp(email, password, name)
+      }
+
+      if (result.error) {
+        setError(result.error)
+      } else {
+        // Redirect to polls page on success
+        router.push('/polls')
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className={className} {...props}>
       <form onSubmit={onSubmit}>
         <div className="grid gap-4">
+          {error && (
+            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
           {type === 'signup' && (
             <div className="grid gap-2">
               <label htmlFor="name" className="text-sm font-medium">
@@ -34,6 +77,7 @@ export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
               </label>
               <input
                 id="name"
+                name="name"
                 placeholder="John Doe"
                 type="text"
                 autoCapitalize="none"
@@ -50,12 +94,14 @@ export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
             </label>
             <input
               id="email"
+              name="email"
               placeholder="name@example.com"
               type="email"
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
               disabled={isLoading}
+              required
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -65,11 +111,14 @@ export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
             </label>
             <input
               id="password"
+              name="password"
               placeholder="********"
               type="password"
               autoCapitalize="none"
               autoComplete="current-password"
               disabled={isLoading}
+              required
+              minLength={6}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -80,10 +129,13 @@ export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
               </label>
               <input
                 id="confirm-password"
+                name="confirm-password"
                 placeholder="********"
                 type="password"
                 autoCapitalize="none"
                 disabled={isLoading}
+                required
+                minLength={6}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>

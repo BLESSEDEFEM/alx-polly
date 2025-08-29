@@ -1,8 +1,8 @@
 import { Metadata } from "next"
 import Link from "next/link"
 
-import { Button } from "@/components/ui/button"
-import { UserAuthForm } from "@/components/auth/user-auth-form"
+import { Button } from "../../components/ui"
+import { UserAuthForm } from "../../components/auth"
 
 export const metadata: Metadata = {
   title: "Sign In",

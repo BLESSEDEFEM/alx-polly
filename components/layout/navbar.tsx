@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '../ui/button'
+import { useAuth } from '../../contexts/auth-context'
 
 export function Navbar() {
   const pathname = usePathname()
-  const isLoggedIn = false // This would be replaced with actual auth state
+  const { user, signOut, loading } = useAuth()
 
   return (
     <header className="border-b bg-gradient-to-r from-green-500 to-blue-500 text-white">
@@ -32,10 +33,19 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center space-x-3">
-          {isLoggedIn ? (
+          {loading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : user ? (
             <>
-              <span className="text-sm mr-2">Welcome, User</span>
-              <Button variant="outline" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
+              <span className="text-sm mr-2">
+                Welcome, {user.user_metadata?.name || user.email}
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-white/10 hover:bg-white/20 text-white border-white/30"
+                onClick={() => signOut()}
+              >
                 Sign Out
               </Button>
             </>

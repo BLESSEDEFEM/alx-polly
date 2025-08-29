@@ -2,7 +2,8 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
-import { Navbar } from '@/components/layout/navbar'
+import { Navbar } from '../components/layout/navbar'
+import { AuthProvider } from '../contexts/auth-context'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,17 +20,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-1">
-            {children}
-          </main>
-          <footer className="border-t py-4 text-center text-sm text-muted-foreground">
-            <div className="container mx-auto">
-              © {new Date().getFullYear()} Alx Polly. All rights reserved.
-            </div>
-          </footer>
-        </div>
+        <AuthProvider>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-1">
+              {children}
+            </main>
+            <footer className="border-t py-4 text-center text-sm text-muted-foreground">
+              <div className="container mx-auto">
+                © {new Date().getFullYear()} Alx Polly. All rights reserved.
+              </div>
+            </footer>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   )
