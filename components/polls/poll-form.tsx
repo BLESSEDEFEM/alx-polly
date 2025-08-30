@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
+const [isSubmitting, setIsSubmitting] = useState(false)
 
 interface PollFormProps {
   onSubmit: (data: PollFormData) => void
@@ -22,6 +24,14 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
     options: ['', ''],
     endDate: '',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    await onSubmit(formData)
+    setIsSubmitting(false)
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target

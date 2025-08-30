@@ -1,8 +1,7 @@
-import { Metadata } from "next"
-import Link from "next/link"
+import { UserAuthForm } from "../../../components/auth/user-auth-form" 
+// 👆 adjust path depending on your folder structure
 
-import { Button } from "../../components/ui"
-import { UserAuthForm } from "../../components/auth"
+import { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -19,12 +18,14 @@ export default function SignInPage() {
             Enter your credentials to sign in to your account
           </p>
         </div>
+
         <UserAuthForm type="signin" />
+
         <div className="text-center text-sm">
           Don&apos;t have an account?{" "}
-          <Link className="underline" href="/auth/signup">
+          <a className="underline" href="/auth/signup">
             Sign up
-          </Link>
+          </a>
         </div>
       </div>
     </div>

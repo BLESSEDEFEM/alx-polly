@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { PollForm, PollFormData } from "@/components/polls/poll-form"
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export const metadata: Metadata = {
   title: "Create Poll",
@@ -15,14 +16,29 @@ export const metadata: Metadata = {
 export default function CreatePollPage() {
   const router = useRouter()
 
-  const handleCreatePoll = (data: PollFormData) => {
-    // In a real app, this would send data to an API
-    console.log('Creating poll with data:', data)
-    
-    // Mock successful creation and redirect
-    setTimeout(() => {
-      router.push('/polls')
-    }, 500)
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  
+  const handleCreatePoll = async (data: PollFormData) => {
+    const { title, description, options, endDate } = data
+    const user = supabase.auth.getUser ? await supabase.auth.getUser() : null
+    const createdBy = user?.data?.user?.id || null
+    const pollPayload = {
+      question: title,
+      options,
+      created_by: createdBy,
+      created_at: new Date().toISOString(),
+      expires_at: endDate ? new Date(endDate).toISOString() : null,
+      description
+    }
+    const { error } = await supabase.from('polls').insert([pollPayload])
+    if (error) {
+      alert('Failed to create poll: ' + error.message)
+      return
+    }
+    router.push('/polls')
   }
 
   return (

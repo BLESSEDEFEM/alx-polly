@@ -1,11 +1,8 @@
 {
+  "$schema": "http://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "esnext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -21,21 +18,11 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/app/*": [
-        "./app/*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/contexts/*": [
-        "./contexts/*"
-      ],
-      "@/lib/*": [
-        "./lib/*"
-      ]
+      "@/*": ["./*"],
+      "@/app/*": ["./app/*"],
+      "@/components/*": ["./components/*"],
+      "@/contexts/*": ["./contexts/*"],
+      "@/lib/*": ["./lib/*"]
     },
     "plugins": [
       {
@@ -49,7 +36,5 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
