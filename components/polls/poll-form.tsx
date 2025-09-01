@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-const [isSubmitting, setIsSubmitting] = useState(false)
 
 interface PollFormProps {
   onSubmit: (data: PollFormData) => void
@@ -17,6 +16,7 @@ export interface PollFormData {
   endDate?: string
 }
 
+// PollForm component
 export function PollForm({ onSubmit, initialData }: PollFormProps) {
   const [formData, setFormData] = useState<PollFormData>(initialData || {
     title: '',
@@ -59,7 +59,6 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
 
   const removeOption = (index: number) => {
     if (formData.options.length <= 2) return // Minimum 2 options
-    
     const newOptions = [...formData.options]
     newOptions.splice(index, 1)
     setFormData(prev => ({
@@ -68,20 +67,10 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
-  }
-
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
+    <form className="space-y-6" onSubmit={handleFormSubmit}>
       <div className="space-y-2">
-        <label
-          htmlFor="title"
-          className="text-sm font-medium leading-none text-green-700"
-        >
-          Poll Title
-        </label>
+        <label htmlFor="title" className="text-sm font-medium leading-none text-green-700">Poll Title</label>
         <input
           id="title"
           name="title"
@@ -94,12 +83,7 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="description"
-          className="text-sm font-medium leading-none text-green-700"
-        >
-          Description (Optional)
-        </label>
+        <label htmlFor="description" className="text-sm font-medium leading-none text-green-700">Description (Optional)</label>
         <textarea
           id="description"
           name="description"
@@ -112,26 +96,13 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
 
       <div className="space-y-4 bg-green-50 p-5 rounded-lg border border-green-100">
         <div className="flex justify-between items-center">
-          <label className="text-sm font-medium leading-none text-green-700">
-            Poll Options
-          </label>
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="sm" 
-            onClick={addOption}
-            className="border-green-500 text-green-600 hover:bg-green-100"
-          >
-            Add Option
-          </Button>
+          <label className="text-sm font-medium leading-none text-green-700">Poll Options</label>
+          <Button type="button" variant="outline" size="sm" onClick={addOption} className="border-green-500 text-green-600 hover:bg-green-100">Add Option</Button>
         </div>
-
         <div className="space-y-3">
           {formData.options.map((option, index) => (
             <div key={index} className="flex items-center space-x-2 bg-white p-2 rounded-md border border-green-100">
-              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-green-100 text-green-700 font-medium text-sm mr-1">
-                {index + 1}
-              </div>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-green-100 text-green-700 font-medium text-sm mr-1">{index + 1}</div>
               <input
                 value={option}
                 onChange={(e) => handleOptionChange(index, e.target.value)}
@@ -139,28 +110,14 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
                 placeholder={`Option ${index + 1}`}
                 required
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                onClick={() => removeOption(index)}
-                disabled={formData.options.length <= 2}
-              >
-                Remove
-              </Button>
+              <Button type="button" variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => removeOption(index)} disabled={formData.options.length <= 2}>Remove</Button>
             </div>
           ))}
         </div>
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="endDate"
-          className="text-sm font-medium leading-none text-green-700"
-        >
-          End Date (Optional)
-        </label>
+        <label htmlFor="endDate" className="text-sm font-medium leading-none text-green-700">End Date (Optional)</label>
         <input
           id="endDate"
           name="endDate"
@@ -171,11 +128,7 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
         />
       </div>
 
-      <Button 
-        type="submit" 
-        className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium py-2" 
-        disabled={isSubmitting}
-      >
+      <Button type="submit" className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium py-2" disabled={isSubmitting}>
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
