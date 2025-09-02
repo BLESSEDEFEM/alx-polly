@@ -1,7 +1,5 @@
-import { UserAuthForm } from "../../../components/auth/user-auth-form" 
-// 👆 adjust path depending on your folder structure
-
 import { Metadata } from "next"
+import { UserAuthForm } from '@/components/auth/user-auth-form'
 
 export const metadata: Metadata = {
   title: "Sign In",

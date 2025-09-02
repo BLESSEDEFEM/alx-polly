@@ -1,17 +1,29 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@/lib/supabase-browser';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function POST(req: Request) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
-  const supabase = createClient();
-  const { question, options, createdBy, expiresAt } = req.body;
+  const cookieStore = cookies()
+
+  const supabase = createRouteHandlerClient({
+    cookies
+  })
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  }
+
+  const { question, options, expiresAt } = await req.json();
+  const createdBy = user.id;
   const { data, error } = await supabase.from('polls').insert([
     { question, options, createdBy, expiresAt }
   ]);
   if (error) {
-    return res.status(400).json({ error: error.message });
+    return new Response(JSON.stringify({ error: error.message }), { status: 400 });
   }
-  return res.status(200).json({ poll: data[0] });
+  return new Response(JSON.stringify({ poll: data?.[0] }), { status: 200 });
 }

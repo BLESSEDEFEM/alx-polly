@@ -1,63 +1,51 @@
 'use client'
 
-import { Metadata } from "next"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-
-import { Button } from "@/components/ui/button"
-import { PollForm, PollFormData } from "@/components/polls/poll-form"
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-
-export const metadata: Metadata = {
-  title: "Create Poll",
-  description: "Create a new poll",
-}
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { PollForm, PollFormData } from '@/components/polls/poll-form'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function CreatePollPage() {
   const router = useRouter()
 
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  
+  const supabase = createClientComponentClient()
+
   const handleCreatePoll = async (data: PollFormData) => {
-    const { title, description, options, endDate } = data
-    const user = supabase.auth.getUser ? await supabase.auth.getUser() : null
-    const createdBy = user?.data?.user?.id || null
+    const { question, options, expiresAt } = data
+
     const pollPayload = {
-      question: title,
-      options,
-      created_by: createdBy,
-      created_at: new Date().toISOString(),
-      expires_at: endDate ? new Date(endDate).toISOString() : null,
-      description
+      question,
+      options: options.map((option) => option.value),
+      expiresAt,
+    };
+
+    const response = await fetch('/api/polls/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(pollPayload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Failed to create poll:', errorData.error);
+      return;
     }
-    const { error } = await supabase.from('polls').insert([pollPayload])
-    if (error) {
-      alert('Failed to create poll: ' + error.message)
-      return
-    }
-    router.push('/polls')
+
+    const poll = await response.json();
+
+    router.push(`/polls/${poll.id}`)
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <Link href="/polls">
-            <Button variant="outline" size="sm">
-              ← Back to Polls
-            </Button>
-          </Link>
-        </div>
-
-        <div className="border-2 border-green-100 rounded-lg p-8 shadow-sm bg-white">
-          <h1 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600">Create a New Poll</h1>
-          <p className="text-gray-500 mb-6">Fill out the form below to create your poll</p>
+    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
+        <h1 className="text-4xl font-bold mb-6">Create New Poll</h1>
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
           <PollForm onSubmit={handleCreatePoll} />
         </div>
-      </div>
+      </main>
     </div>
   )
 }
