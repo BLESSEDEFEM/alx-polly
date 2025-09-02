@@ -15,6 +15,8 @@ export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
   const [error, setError] = useState<string>('')
   const { signIn, signUp } = useAuth()
   const router = useRouter()
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const redirectTo = searchParams?.get("redirectTo") || "/polls";
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
@@ -51,8 +53,8 @@ export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
       if (result.error) {
         setError(result.error)
       } else {
-        // Redirect to polls page on success
-        router.push('/polls')
+        // Redirect to intended page on success
+        router.push(redirectTo)
       }
     } catch (err) {
       setError('An unexpected error occurred')
