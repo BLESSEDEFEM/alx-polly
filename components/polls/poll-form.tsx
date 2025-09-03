@@ -20,9 +20,10 @@ export type PollFormData = z.infer<typeof formSchema>
 
 interface PollFormProps {
   onSubmit: (data: PollFormData) => void
+  isSubmitting?: boolean
 }
 
-export function PollForm({ onSubmit }: PollFormProps) {
+export function PollForm({ onSubmit, isSubmitting = false }: PollFormProps) {
   const form = useForm<PollFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,7 +38,7 @@ export function PollForm({ onSubmit }: PollFormProps) {
     name: 'options',
   })
 
-  const { isSubmitting } = form.formState
+  // Use external isSubmitting prop instead of form's internal state
 
   return (
     <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>

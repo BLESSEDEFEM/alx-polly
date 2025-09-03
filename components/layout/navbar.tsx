@@ -29,6 +29,14 @@ export function Navbar() {
             >
               Create Poll
             </Link>
+            {user && (
+              <Link 
+                href="/dashboard" 
+                className={`text-sm hover:text-green-100 transition-colors ${pathname.startsWith('/dashboard') ? 'font-medium text-white' : 'text-white/80'}`}
+              >
+                Dashboard
+              </Link>
+            )}
           </nav>
         </div>
 

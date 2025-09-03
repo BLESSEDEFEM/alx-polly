@@ -10,7 +10,9 @@ jest.mock('@supabase/auth-helpers-nextjs', () => ({
     },
     from: jest.fn(() => ({
       insert: jest.fn(() => ({
-        select: jest.fn(() => Promise.resolve({ data: [{ id: 'test-poll-id', question: 'Test Question', options: ['Option 1', 'Option 2'] }], error: null }))
+        select: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: { id: 'test-poll-id', question: 'Test Question', options: ['Option 1', 'Option 2'] }, error: null }))
+        }))
       }))
     }))
   }))
@@ -53,7 +55,8 @@ describe('POST /api/polls', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error[0].message).toBe('Question is required');
+    expect(data.error).toBe('Validation failed');
+    expect(data.details[0].message).toBe('Question must be at least 5 characters');
   });
 
   // Edge/failure case: Invalid input (less than two options)
@@ -69,7 +72,8 @@ describe('POST /api/polls', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error[0].message).toBe('At least two options are required');
+    expect(data.error).toBe('Validation failed');
+    expect(data.details[0].message).toBe('At least two options are required');
   });
 
   // Edge/failure case: Supabase error
@@ -96,6 +100,6 @@ describe('POST /api/polls', () => {
     const data = await response.json();
 
     expect(response.status).toBe(500);
-    expect(data.error).toBe('Database error');
+    expect(data.error).toBe('Internal Server Error');
   });
 });
