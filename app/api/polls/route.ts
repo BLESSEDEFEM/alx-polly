@@ -9,48 +9,84 @@ const pollSchema = z.object({
   expiresAt: z.string().optional().nullable(),
 });
 
+// Helper function to create Supabase client
+function createSupabaseClient() {
+  const cookieStore = cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+}
+
+// Helper function to authenticate user
+async function authenticateUser(supabase: any) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    return { user: null, error: NextResponse.json({ error: 'Authentication required' }, { status: 401 }) };
+  }
+  
+  return { user, error: null };
+}
+
+// Helper function to handle validation errors
+function handleValidationError(error: z.ZodError) {
+  return NextResponse.json({ 
+    error: 'Validation failed', 
+    details: error.issues.map(issue => ({
+      field: issue.path.join('.'),
+      message: issue.message
+    }))
+  }, { status: 400 });
+}
+
+// Helper function to handle unexpected errors
+function handleUnexpectedError(error: unknown, context: string) {
+  console.error(`Unexpected error in ${context}:`, error);
+  return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+}
+
+// Helper function to prepare poll data
+function preparePollData(question: string, options: string[], expiresAt: string | null | undefined, userId: string) {
+  const pollData: any = {
+    question,
+    options,
+    created_by: userId,
+    created_at: new Date().toISOString(),
+  };
+
+  if (expiresAt && expiresAt.trim() !== '') {
+    pollData.expires_at = new Date(expiresAt).toISOString();
+  }
+
+  return pollData;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { question, options, expiresAt } = pollSchema.parse(body);
 
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    );
-
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const supabase = createSupabaseClient();
+    const { user, error: authError } = await authenticateUser(supabase);
     
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    if (authError) {
+      return authError;
     }
 
-    // Prepare poll data with created_by
-    const pollData: any = {
-      question,
-      options,
-      created_by: user.id,
-      created_at: new Date().toISOString(),
-    };
-
-    // Add expiration date if provided
-    if (expiresAt && expiresAt.trim() !== '') {
-      pollData.expires_at = new Date(expiresAt).toISOString();
-    }
+    const pollData = preparePollData(question, options, expiresAt, user!.id);
 
     const { data, error } = await supabase
       .from('polls')
@@ -66,38 +102,15 @@ export async function POST(request: Request) {
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message
-        }))
-      }, { status: 400 });
+      return handleValidationError(error);
     }
-    console.error('Unexpected error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return handleUnexpectedError(error, 'POST');
   }
 }
 
 export async function GET() {
   try {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    );
+    const supabase = createSupabaseClient();
 
     const { data, error } = await supabase
       .from('polls')
@@ -111,8 +124,7 @@ export async function GET() {
 
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    console.error('Unexpected error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return handleUnexpectedError(error, 'GET');
   }
 }
 
@@ -127,29 +139,11 @@ export async function PUT(request: Request) {
     
     const { question: validatedQuestion, options: validatedOptions, expiresAt: validatedExpiresAt } = pollSchema.parse({ question, options, expiresAt });
 
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    );
-
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const supabase = createSupabaseClient();
+    const { user, error: authError } = await authenticateUser(supabase);
     
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    if (authError) {
+      return authError;
     }
 
     // Prepare update data
@@ -167,7 +161,7 @@ export async function PUT(request: Request) {
       .from('polls')
       .update(updateData)
       .eq('id', id)
-      .eq('created_by', user.id)
+      .eq('created_by', user!.id)
       .select()
       .single();
 
@@ -183,16 +177,9 @@ export async function PUT(request: Request) {
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message
-        }))
-      }, { status: 400 });
+      return handleValidationError(error);
     }
-    console.error('Unexpected error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return handleUnexpectedError(error, 'PUT');
   }
 }
 
@@ -205,36 +192,18 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Poll ID is required' }, { status: 400 });
     }
 
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    );
-
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const supabase = createSupabaseClient();
+    const { user, error: authError } = await authenticateUser(supabase);
     
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    if (authError) {
+      return authError;
     }
 
     const { data, error } = await supabase
       .from('polls')
       .delete()
       .eq('id', id)
-      .eq('created_by', user.id)
+      .eq('created_by', user!.id)
       .select()
       .single();
 
@@ -249,7 +218,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ message: 'Poll deleted successfully' }, { status: 200 });
   } catch (error) {
-    console.error('Unexpected error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return handleUnexpectedError(error, 'DELETE');
   }
 }
