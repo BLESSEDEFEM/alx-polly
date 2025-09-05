@@ -3,12 +3,35 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 
+/**
+ * Zod schema for vote submission validation
+ * Ensures optionIndex is a valid non-negative number
+ */
 const voteSchema = z.object({
   optionIndex: z.number().min(0, 'Invalid option index'),
 });
 
+/**
+ * POST /api/polls/[id]/vote - Submit a vote for a specific poll
+ * 
+ * Handles vote submission with comprehensive validation and duplicate prevention.
+ * Supports both authenticated and anonymous voting with different tracking mechanisms.
+ * 
+ * Security Features:
+ * - Duplicate vote prevention for authenticated users
+ * - IP-based tracking for anonymous users
+ * - Poll expiration validation
+ * - Option index validation
+ * - Input sanitization with Zod schema
+ * 
+ * @param {Request} request - HTTP request containing vote data
+ * @param {Object} params - Route parameters
+ * @param {string} params.id - Poll ID from URL
+ * @returns {NextResponse} JSON response with vote result or error
+ */
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
+    // Parse and validate request body
     const body = await request.json();
     const { optionIndex } = voteSchema.parse(body);
     const pollId = params.id;
@@ -31,11 +54,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
       }
     );
 
-    // Get the current user (optional for voting)
+    // Get the current user (optional for voting - supports anonymous voting)
     const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || null;
+    const userId = user?.id || null; // null for anonymous users
 
-    // First, verify the poll exists and get its options
+    // Verify the poll exists and get its configuration
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, options, expires_at')
@@ -46,17 +69,17 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Poll not found' }, { status: 404 });
     }
 
-    // Check if poll has expired
+    // Validate poll is still active (not expired)
     if (poll.expires_at && new Date(poll.expires_at) < new Date()) {
       return NextResponse.json({ error: 'This poll has expired' }, { status: 400 });
     }
 
-    // Validate option index
+    // Validate the selected option exists in the poll
     if (optionIndex >= poll.options.length) {
       return NextResponse.json({ error: 'Invalid option selected' }, { status: 400 });
     }
 
-    // Check if user has already voted (if authenticated)
+    // Prevent duplicate voting for authenticated users
     if (userId) {
       const { data: existingVote } = await supabase
         .from('votes')
@@ -70,19 +93,19 @@ export async function POST(request: Request, { params }: { params: { id: string 
       }
     }
 
-    // Get client IP for anonymous voting tracking
+    // Extract client IP for anonymous voting duplicate prevention
     const clientIp = request.headers.get('x-forwarded-for') || 
                      request.headers.get('x-real-ip') || 
-                     'unknown';
+                     'unknown'; // Fallback for local development
 
-    // Check if IP has already voted (for anonymous users)
+    // Prevent duplicate voting for anonymous users using IP tracking
     if (!userId) {
       const { data: existingIpVote } = await supabase
         .from('votes')
         .select('id')
         .eq('poll_id', pollId)
         .eq('ip_address', clientIp)
-        .is('user_id', null)
+        .is('user_id', null) // Ensure we're checking anonymous votes only
         .single();
 
       if (existingIpVote) {
@@ -90,17 +113,18 @@ export async function POST(request: Request, { params }: { params: { id: string 
       }
     }
 
-    // Create the vote
+    // Prepare vote data with appropriate tracking method
     const voteData: any = {
       poll_id: pollId,
       option_index: optionIndex,
       created_at: new Date().toISOString(),
     };
 
+    // Use user ID for authenticated votes, IP address for anonymous votes
     if (userId) {
-      voteData.user_id = userId;
+      voteData.user_id = userId; // Authenticated vote tracking
     } else {
-      voteData.ip_address = clientIp;
+      voteData.ip_address = clientIp; // Anonymous vote tracking
     }
 
     const { data: vote, error: voteError } = await supabase
@@ -114,7 +138,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Failed to submit vote' }, { status: 500 });
     }
 
-    // Get updated vote counts for this poll
+    // Fetch all votes to calculate updated results
     const { data: votes, error: votesError } = await supabase
       .from('votes')
       .select('option_index')
@@ -125,9 +149,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Vote submitted but failed to get updated counts' }, { status: 500 });
     }
 
-    // Calculate vote counts for each option
+    // Calculate vote distribution across all options
     const voteCounts = new Array(poll.options.length).fill(0);
     votes.forEach(vote => {
+      // Validate option index to prevent array bounds errors
       if (vote.option_index < voteCounts.length) {
         voteCounts[vote.option_index]++;
       }
@@ -157,7 +182,17 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 }
 
-// GET endpoint to fetch vote results for a poll
+/**
+ * GET /api/polls/[id]/vote - Fetch vote results for a specific poll
+ * 
+ * Returns current vote counts and statistics for a poll without requiring authentication.
+ * Provides real-time voting results for display in poll result components.
+ * 
+ * @param {Request} request - HTTP request
+ * @param {Object} params - Route parameters
+ * @param {string} params.id - Poll ID from URL
+ * @returns {NextResponse} JSON response with vote counts and poll options
+ */
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const pollId = params.id;
@@ -180,7 +215,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       }
     );
 
-    // Get poll details
+    // Fetch poll configuration to validate existence and get options
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, options')
@@ -191,7 +226,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Poll not found' }, { status: 404 });
     }
 
-    // Get all votes for this poll
+    // Fetch all votes to calculate current results
     const { data: votes, error: votesError } = await supabase
       .from('votes')
       .select('option_index')
@@ -202,15 +237,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Failed to fetch vote results' }, { status: 500 });
     }
 
-    // Calculate vote counts for each option
+    // Calculate vote distribution across all poll options
     const voteCounts = new Array(poll.options.length).fill(0);
     votes?.forEach(vote => {
+      // Validate option index to prevent array bounds errors
       if (vote.option_index < voteCounts.length) {
         voteCounts[vote.option_index]++;
       }
     });
 
-    const totalVotes = votes?.length || 0;
+    const totalVotes = votes?.length || 0; // Handle null/undefined votes array
 
     return NextResponse.json({
       voteCounts,

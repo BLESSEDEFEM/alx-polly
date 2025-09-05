@@ -9,21 +9,49 @@ import { Badge } from '@/components/ui/badge'
 import { Edit, Trash2, Eye, Plus } from 'lucide-react'
 import Link from 'next/link'
 
+/**
+ * Poll interface defining the structure of poll data
+ * @interface Poll
+ */
+
 interface Poll {
+  /** Unique identifier for the poll */
   id: string
+  /** The poll question text */
   question: string
+  /** Array of poll option strings */
   options: string[]
+  /** ISO timestamp when poll was created */
   created_at: string
+  /** Optional ISO timestamp when poll expires */
   expires_at?: string
+  /** User ID of the poll creator */
   created_by: string
 }
 
+/**
+ * User Dashboard Page Component
+ * 
+ * Displays a personalized dashboard where authenticated users can view and manage
+ * their created polls. Provides quick access to poll creation and displays poll
+ * performance metrics.
+ * 
+ * Features:
+ * - Lists all polls created by the current user
+ * - Shows poll statistics and performance data
+ * - Quick access to create new polls
+ * - Loading states and error handling
+ * - Empty state guidance for new users
+ * 
+ * @returns {JSX.Element} The dashboard page with user's polls
+ */
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [polls, setPolls] = useState<Poll[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // State management for polls data and UI states
+  const [polls, setPolls] = useState<Poll[]>([]) // User's polls collection
+  const [loading, setLoading] = useState(true) // Loading state for data fetching
+  const [error, setError] = useState<string | null>(null) // Error state for failed requests
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {

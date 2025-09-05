@@ -8,6 +8,10 @@ import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 
+/**
+ * Zod schema for poll form validation
+ * Ensures data integrity and provides client-side validation
+ */
 const formSchema = z.object({
   question: z.string().min(5, { message: 'Question must be at least 5 characters.' }).max(160, { message: 'Question must not be longer than 160 characters.' }),
   options: z.array(z.object({
@@ -16,29 +20,58 @@ const formSchema = z.object({
   expiresAt: z.string().optional(),
 })
 
+/** Type definition for poll form data based on validation schema */
 export type PollFormData = z.infer<typeof formSchema>
 
+/**
+ * Props interface for PollForm component
+ */
 interface PollFormProps {
+  /** Callback function called when form is submitted with valid data */
   onSubmit: (data: PollFormData) => void
+  /** Loading state to disable form during submission */
   isSubmitting?: boolean
 }
 
+/**
+ * PollForm - Reusable form component for poll creation and editing
+ * 
+ * This component provides a comprehensive form interface for poll management with:
+ * - React Hook Form integration for efficient form handling
+ * - Zod schema validation for data integrity
+ * - Dynamic option management with field arrays
+ * - Optional expiration date setting
+ * - Responsive design with Tailwind CSS styling
+ * 
+ * Features:
+ * - Client-side validation with real-time feedback
+ * - Dynamic add/remove options functionality
+ * - Minimum 2 options enforcement
+ * - Loading states during form submission
+ * - Accessible form controls with proper labeling
+ * - Gradient styling for enhanced visual appeal
+ * 
+ * @param {PollFormProps} props - Component props
+ * @returns {JSX.Element} Validated poll form with dynamic options
+ */
 export function PollForm({ onSubmit, isSubmitting = false }: PollFormProps) {
+  // Initialize form with validation schema and default values
   const form = useForm<PollFormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema), // Zod validation integration
     defaultValues: {
       question: '',
-      options: [{ value: '' }, { value: '' }],
+      options: [{ value: '' }, { value: '' }], // Start with 2 empty options
       expiresAt: '',
     },
   })
 
+  // Field array management for dynamic options
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'options',
   })
 
-  // Use external isSubmitting prop instead of form's internal state
+  // Use external isSubmitting prop for consistent loading state management
 
   return (
     <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>

@@ -6,36 +6,82 @@ import { useRouter } from 'next/navigation'
 import { Button } from '../ui/button'
 import { useAuth } from '../../contexts/auth-context'
 
+/**
+ * Props interface for the UserAuthForm component
+ * @interface UserAuthFormProps
+ * @extends React.HTMLAttributes<HTMLDivElement>
+ */
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Determines whether the form is for sign-in or sign-up functionality */
   type: 'signin' | 'signup'
 }
 
+/**
+ * Universal authentication form component that handles both sign-in and sign-up flows
+ * 
+ * This component provides a unified interface for user authentication, dynamically
+ * rendering form fields based on the authentication type. It includes comprehensive
+ * form validation, error handling, and loading states to ensure a smooth user experience.
+ * 
+ * Key features:
+ * - Dual-mode operation (sign-in/sign-up)
+ * - Client-side form validation
+ * - Password confirmation for sign-up
+ * - Redirect handling after successful authentication
+ * - Loading states and error messaging
+ * - Accessibility-compliant form structure
+ * 
+ * @param {UserAuthFormProps} props - Component props including type and HTML attributes
+ * @returns {JSX.Element} Rendered authentication form
+ */
 export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>('')
-  const { signIn, signUp } = useAuth()
-  const router = useRouter()
+  // Component state management
+  const [isLoading, setIsLoading] = useState<boolean>(false) // Tracks form submission state
+  const [error, setError] = useState<string>('') // Stores validation and authentication errors
+  
+  // Authentication context and navigation hooks
+  const { signIn, signUp } = useAuth() // Authentication methods from context
+  const router = useRouter() // Next.js router for programmatic navigation
+  
+  // Handle redirect logic after successful authentication
+  // Safely access window object to avoid SSR issues
   const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-  const redirectTo = searchParams?.get("redirectTo") || "/polls";
+  const redirectTo = searchParams?.get("redirectTo") || "/polls"; // Default redirect to polls page
 
+  /**
+   * Handles form submission for both sign-in and sign-up flows
+   * 
+   * This function manages the complete authentication process including:
+   * - Form data extraction and validation
+   * - Password confirmation for sign-up
+   * - Authentication API calls
+   * - Error handling and user feedback
+   * - Post-authentication navigation
+   * 
+   * @param {React.SyntheticEvent} event - Form submission event
+   */
   async function onSubmit(event: React.SyntheticEvent) {
-    event.preventDefault()
-    setIsLoading(true)
-    setError('')
+    event.preventDefault() // Prevent default form submission behavior
+    setIsLoading(true) // Show loading state to user
+    setError('') // Clear any previous errors
 
+    // Extract form data using FormData API for type safety
     const formData = new FormData(event.target as HTMLFormElement)
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-    const name = formData.get('name') as string
-    const confirmPassword = formData.get('confirm-password') as string
+    const name = formData.get('name') as string // Only used for sign-up
+    const confirmPassword = formData.get('confirm-password') as string // Only used for sign-up
 
-    // Validation
+    // Client-side validation before API calls
+    // Check for required fields to provide immediate feedback
     if (!email || !password) {
       setError('Please fill in all required fields')
       setIsLoading(false)
       return
     }
 
+    // Sign-up specific validation: ensure passwords match
+    // This prevents unnecessary API calls for mismatched passwords
     if (type === 'signup' && password !== confirmPassword) {
       setError('Passwords do not match')
       setIsLoading(false)
@@ -44,21 +90,28 @@ export function UserAuthForm({ type, className, ...props }: UserAuthFormProps) {
 
     try {
       let result
+      // Route to appropriate authentication method based on form type
       if (type === 'signin') {
         result = await signIn(email, password)
       } else {
+        // For sign-up, include the user's name in their profile
         result = await signUp(email, password, name)
       }
 
+      // Handle authentication result
       if (result.error) {
+        // Display server-side validation or authentication errors
         setError(result.error)
       } else {
-        // Redirect to intended page on success
+        // Success: redirect to intended page or default dashboard
+        // This maintains user's intended navigation flow
         router.push(redirectTo)
       }
     } catch (err) {
+      // Handle unexpected errors (network issues, etc.)
       setError('An unexpected error occurred')
     } finally {
+      // Always reset loading state regardless of outcome
       setIsLoading(false)
     }
   }
