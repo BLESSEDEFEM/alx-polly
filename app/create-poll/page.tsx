@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -65,7 +66,7 @@ export default function CreatePollPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500">Create New Poll</h1>
+        <h1 className="text-4xl font-bold mb-6 text-black">Create New Poll</h1>
         
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 max-w-md w-full">
@@ -73,7 +74,7 @@ export default function CreatePollPage() {
           </div>
         )}
         
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-green-100">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-gray-200">
           <PollForm onSubmit={handleCreatePoll} isSubmitting={isSubmitting} />
         </div>
       </main>

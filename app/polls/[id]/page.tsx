@@ -168,8 +168,8 @@ export default function PollDetailsPage({ params }: { params: { id: string } }) 
           </Link>
         </div>
 
-        <div className="border-2 border-green-100 rounded-lg p-8 shadow-sm bg-white">
-          <h1 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600">{poll.question}</h1>
+        <div className="border-2 border-gray-200 rounded-lg p-8 shadow-sm bg-white">
+          <h1 className="text-3xl font-bold mb-2 text-black">{poll.question}</h1>
           <p className="text-gray-500 mb-6">Vote for your preferred option below.</p>
 
           {successMessage && (
@@ -185,11 +185,11 @@ export default function PollDetailsPage({ params }: { params: { id: string } }) 
           )}
 
           {!hasVoted ? (
-            <div className="mb-8 bg-green-50 p-6 rounded-lg border border-green-100">
-              <h2 className="text-xl font-semibold mb-4 text-green-700">Vote</h2>
+            <div className="mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4 text-black">Vote</h2>
               <form onSubmit={handleVoteSubmit} className="space-y-4">
                 {poll.options.map((option: string, index: number) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 rounded-md hover:bg-green-100 transition-colors">
+                  <div key={index} className="flex items-center space-x-3 p-3 rounded-md hover:bg-red-50 transition-colors">
                     <input
                       type="radio"
                       id={`option-${index}`}
@@ -197,7 +197,7 @@ export default function PollDetailsPage({ params }: { params: { id: string } }) 
                       value={index}
                       checked={selectedOption === index}
                       onChange={() => setSelectedOption(index)}
-                      className="h-5 w-5 border-gray-300 text-green-600 focus:ring-green-500"
+                      className="h-5 w-5 border-gray-300 text-red-600 focus:ring-red-500"
                       disabled={isSubmitting}
                     />
                     <label
@@ -210,7 +210,7 @@ export default function PollDetailsPage({ params }: { params: { id: string } }) 
                 ))}
                 <Button 
                   type="submit" 
-                  className="mt-6 bg-green-500 hover:bg-green-600"
+                  className="mt-6 bg-red-500 hover:bg-red-600"
                   disabled={isSubmitting || selectedOption === null}
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit Vote'}
@@ -224,8 +224,8 @@ export default function PollDetailsPage({ params }: { params: { id: string } }) 
             </div>
           )}
 
-          <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
-            <h2 className="text-xl font-semibold mb-4 text-blue-700">Results</h2>
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-black">Results</h2>
             <div className="space-y-4">
               {poll.options.map((option: string, index: number) => {
                 const votes = voteResults?.voteCounts[index] || 0
@@ -235,21 +235,21 @@ export default function PollDetailsPage({ params }: { params: { id: string } }) 
                 
                 return (
                   <div key={index} className={`space-y-2 p-3 rounded-md transition-colors ${
-                    isSelected ? 'bg-blue-200 border-2 border-blue-400' : 'hover:bg-blue-100'
+                    isSelected ? 'bg-red-50 border-2 border-red-400' : 'hover:bg-gray-100'
                   }`}>
                     <div className="flex justify-between items-center">
                       <span className={`text-sm font-medium ${
-                        isSelected ? 'text-blue-800 font-bold' : 'text-gray-700'
+                        isSelected ? 'text-red-800 font-bold' : 'text-gray-700'
                       }`}>
                         {option} {isSelected && '✓'}
                       </span>
-                      <span className="text-sm font-bold text-blue-600">
+                      <span className="text-sm font-bold text-red-600">
                         {percentage}%
                       </span>
                     </div>
                     <div className="w-full bg-white rounded-full h-3 border border-gray-200">
                       <div
-                        className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
+                        className="bg-red-500 h-3 rounded-full transition-all duration-500"
                         style={{
                           width: `${percentage}%`,
                         }}
@@ -261,8 +261,8 @@ export default function PollDetailsPage({ params }: { params: { id: string } }) 
                   </div>
                 )
               })}
-              <div className="mt-6 pt-4 border-t border-blue-200 flex justify-between items-center">
-                <p className="text-sm font-medium text-blue-700">
+              <div className="mt-6 pt-4 border-t border-gray-200 flex justify-between items-center">
+                <p className="text-sm font-medium text-black">
                   Total votes: <span className="font-bold">{voteResults?.totalVotes || 0}</span>
                 </p>
                 <p className="text-xs text-gray-500">Results update in real-time</p>
@@ -272,7 +272,7 @@ export default function PollDetailsPage({ params }: { params: { id: string } }) 
 
           <div className="mt-8 pt-6 border-t border-gray-100">
             <div className="flex justify-between items-center text-sm">
-              <span>Created by <span className="text-blue-500 font-medium">{poll.created_by}</span></span>
+              <span>Created by <span className="text-red-500 font-medium">{poll.created_by}</span></span>
               <span className="text-gray-500">Created on {new Date(poll.created_at).toLocaleDateString()}</span>
             </div>
           </div>

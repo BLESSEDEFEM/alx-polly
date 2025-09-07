@@ -77,7 +77,7 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
       <div className="space-y-2">
         <label
           htmlFor="title"
-          className="text-sm font-medium leading-none text-green-700"
+          className="text-sm font-medium leading-none text-black"
         >
           Poll Title
         </label>
@@ -86,7 +86,7 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
           name="title"
           value={formData.title}
           onChange={handleChange}
-          className="flex h-10 w-full rounded-md border border-green-200 bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="What's your favorite programming language?"
           required
         />
@@ -95,7 +95,7 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
       <div className="space-y-2">
         <label
           htmlFor="description"
-          className="text-sm font-medium leading-none text-green-700"
+          className="text-sm font-medium leading-none text-black"
         >
           Description (Optional)
         </label>
@@ -104,14 +104,14 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
           name="description"
           value={formData.description}
           onChange={handleChange}
-          className="flex min-h-[80px] w-full rounded-md border border-green-200 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Provide additional context for your poll"
         />
       </div>
 
-      <div className="space-y-4 bg-green-50 p-5 rounded-lg border border-green-100">
+      <div className="space-y-4 bg-gray-50 p-5 rounded-lg border border-gray-200">
         <div className="flex justify-between items-center">
-          <label className="text-sm font-medium leading-none text-green-700">
+          <label className="text-sm font-medium leading-none text-black">
             Poll Options
           </label>
           <Button 
@@ -119,7 +119,7 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
             variant="outline" 
             size="sm" 
             onClick={addOption}
-            className="border-green-500 text-green-600 hover:bg-green-100"
+            className="border-red-500 text-red-600 hover:bg-red-50"
           >
             Add Option
           </Button>
@@ -127,14 +127,14 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
 
         <div className="space-y-3">
           {formData.options.map((option, index) => (
-            <div key={index} className="flex items-center space-x-2 bg-white p-2 rounded-md border border-green-100">
-              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-green-100 text-green-700 font-medium text-sm mr-1">
+            <div key={index} className="flex items-center space-x-2 bg-white p-2 rounded-md border border-gray-200">
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-red-100 text-red-700 font-medium text-sm mr-1">
                 {index + 1}
               </div>
               <input
                 value={option}
                 onChange={(e) => handleOptionChange(index, e.target.value)}
-                className="flex h-10 w-full rounded-md border border-green-200 bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder={`Option ${index + 1}`}
                 required
               />
@@ -156,7 +156,7 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
       <div className="space-y-2">
         <label
           htmlFor="endDate"
-          className="text-sm font-medium leading-none text-green-700"
+          className="text-sm font-medium leading-none text-black"
         >
           End Date (Optional)
         </label>
@@ -166,13 +166,13 @@ export function PollForm({ onSubmit, initialData }: PollFormProps) {
           type="datetime-local"
           value={formData.endDate}
           onChange={handleChange}
-          className="flex h-10 w-full rounded-md border border-green-200 bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 
       <Button 
         type="submit" 
-        className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium py-2" 
+        className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2" 
         disabled={isSubmitting}
       >
         {isSubmitting ? (

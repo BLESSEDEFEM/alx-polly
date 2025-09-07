@@ -57,11 +57,11 @@ export default function PollsPage() {
       <SuccessMessage />
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500">Polls</h1>
+          <h1 className="text-3xl font-bold text-black">Polls</h1>
           <p className="text-gray-500 mt-2">View and participate in community polls</p>
         </div>
         <Link href="/create-poll">
-          <Button className="bg-green-500 hover:bg-green-600">Create Poll</Button>
+          <Button className="bg-red-500 hover:bg-red-600">Create Poll</Button>
         </Link>
       </div>
 
@@ -84,7 +84,7 @@ export default function PollsPage() {
               {error ? 'Failed to load polls. Please try again later.' : 'No polls found. Be the first to create one!'}
             </p>
             <Link href="/create-poll">
-              <Button className="bg-green-500 hover:bg-green-600">Create Your First Poll</Button>
+              <Button className="bg-red-500 hover:bg-red-600">Create Your First Poll</Button>
             </Link>
           </div>
         )}
