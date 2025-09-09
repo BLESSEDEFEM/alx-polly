@@ -11,17 +11,37 @@ const pollSchema = z.object({
   question: z
     .string()
     .min(5, 'Question must be at least 5 characters')
-    .max(160, 'Question must not be longer than 160 characters'),
+    .max(160, 'Question must not be longer than 160 characters')
+    .transform(v => v.trim()),
   options: z
     .array(
       z
         .string()
         .min(1, 'Option cannot be empty')
         .max(50, 'Option must not be longer than 50 characters')
+        .transform(v => v.trim())
     )
     .min(2, 'At least two options are required')
-    .max(10, 'You can add at most 10 options'),
-  expiresAt: z.string().optional().nullable(),
+    .max(10, 'You can add at most 10 options')
+    .refine(opts => new Set(opts).size === opts.length, {
+      message: 'Options must be unique'
+    }),
+  expiresAt: z.preprocess(
+    (val) => {
+      if (!val || val === '') return null;
+      const date = new Date(val as string);
+      if (isNaN(date.getTime())) return undefined; // Will cause validation to fail
+      return date.toISOString();
+    },
+    z.string().nullable().optional()
+  ),
+});
+
+/**
+ * Validation schema for poll updates (includes ID)
+ */
+const pollUpdateSchema = pollSchema.extend({
+  id: z.string().uuid('Invalid poll ID format'),
 });
 
 /**
@@ -227,20 +247,12 @@ export async function GET(): Promise<NextResponse> {
 export async function PUT(request: Request): Promise<NextResponse> {
   try {
     const body = await request.json();
-    const { id: pollId, question, options, expiresAt } = body;
-    
-    if (!pollId) {
-      return NextResponse.json(
-        { error: 'Poll ID is required' }, 
-        { status: 400 }
-      );
-    }
-    
     const { 
+      id: pollId, 
       question: validatedQuestion, 
       options: validatedOptions, 
       expiresAt: validatedExpiresAt 
-    } = pollSchema.parse({ question, options, expiresAt });
+    } = pollUpdateSchema.parse(body);
 
     const supabase = createSupabaseClient();
     const { user, error: authError } = await authenticateUser(supabase);
@@ -266,7 +278,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
       .eq('id', pollId)
       .eq('created_by', user!.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error updating poll:', error);
@@ -300,14 +312,11 @@ export async function PUT(request: Request): Promise<NextResponse> {
 export async function DELETE(request: Request): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url);
-    const pollId = searchParams.get('id');
+    const pollIdParam = searchParams.get('id');
     
-    if (!pollId) {
-      return NextResponse.json(
-        { error: 'Poll ID is required' }, 
-        { status: 400 }
-      );
-    }
+    // Validate poll ID as UUID
+    const pollIdSchema = z.string().uuid('Invalid poll ID format');
+    const pollId = pollIdSchema.parse(pollIdParam);
 
     const supabase = createSupabaseClient();
     const { user, error: authError } = await authenticateUser(supabase);
@@ -322,7 +331,7 @@ export async function DELETE(request: Request): Promise<NextResponse> {
       .eq('id', pollId)
       .eq('created_by', user!.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error deleting poll:', error);
